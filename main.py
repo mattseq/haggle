@@ -15,15 +15,23 @@ def evaluate_model(model, X_val, y_val):
 def create_model():
     return CatBoostRegressor(
         iterations=5000,
-        learning_rate=0.1,
-        depth=7,
+        learning_rate=0.03,
+        depth=4,
         loss_function="RMSE",
         eval_metric="RMSE",
         verbose=100,
+        random_seed=42,
+        l2_leaf_reg=5,
+        random_strength=1
     )
 
-def train_model(model, X_train, y_train):
-    model.fit(X_train, np.log1p(y_train))
+def train_model(model, X_train, y_train, X_val, y_val):
+    model.fit(
+        X_train,
+        np.log1p(y_train),
+        eval_set=(X_val, np.log1p(y_val)),
+        early_stopping_rounds=200,
+    )
     return model
 
 df = pd.read_csv("data/train.csv")
@@ -37,11 +45,11 @@ categorical_features = X.select_dtypes(include=["object", "category"]).columns.t
 
 X = X.drop(columns=categorical_features)
 
-X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42, shuffle=True)
 
 model = create_model()
 
-model = train_model(model, X_train, y_train)
+model = train_model(model, X_train, y_train, X_val, y_val)
 
 importance = pd.DataFrame(
     {"feature": X.columns, "importance": model.feature_importances_}
@@ -49,6 +57,12 @@ importance = pd.DataFrame(
 
 print(importance)
 
-score = evaluate_model(model, X_val, y_val)
+train_score = evaluate_model(model, X_train, y_train)
+val_score = evaluate_model(model, X_val, y_val)
 
-print(f"RMSLE: {score}")
+print("Train RMSLE:", train_score)
+print("Validation RMSLE:", val_score)
+
+baseline = np.full(len(y_val), y_train.median())
+
+print("Baseline:", root_mean_squared_log_error(y_val, baseline))
