@@ -38,8 +38,31 @@ df = pd.read_csv("data/train.csv")
 
 
 X = df.drop(columns=["hours_spent", "log_hours", "hours_bucket", "project_id"])
-X = df[["active_commit_days", "description_word_count", "lines_added_total", "median_lines_per_commit", "project_span_days", "lines_of_code", "pct_code_in_first_commit", "num_source_files", "pct_commits_weekend", "avg_file_length", "num_commits", "lines_deleted_total", "num_dependencies"]]
 y = df["hours_spent"]
+
+features = [
+    "active_commit_days",
+    "project_span_days",
+    "num_commits",
+    "num_commit_authors",
+    "num_merge_commits",
+
+    "lines_added_total",
+    "lines_deleted_total",
+    "lines_of_code",
+    "num_source_files",
+    "num_directories",
+    "max_dir_depth",
+
+    "max_lines_in_one_commit",
+    "pct_generic_commit_msgs",
+    "churn_ratio",
+    
+    "readme_word_count",
+]
+
+X = df[features]
+
 
 categorical_features = X.select_dtypes(include=["object", "category"]).columns.tolist()
 
