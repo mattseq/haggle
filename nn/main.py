@@ -117,12 +117,14 @@ features = [
     "max_dir_depth",
     "max_lines_in_one_commit",
     "pct_generic_commit_msgs",
-    "churn_ratio",
+    # "churn_ratio",
     "readme_word_count",
 ]
 
 X = df[features]
 
+print("nans in X:", X.isna().sum())
+print("nans in y:", y.isna().sum())
 
 X_train, X_val, y_train, y_val = train_test_split(
     X, y, test_size=0.2, random_state=42, shuffle=True
@@ -134,9 +136,9 @@ X_train = scalar.fit_transform(X_train)
 X_val = scalar.transform(X_val)
 
 X_train = torch.tensor(X_train, dtype=torch.float32).to(device)
-y_train = torch.tensor(y_train.values, dtype=torch.float32).to(device)
+y_train = torch.tensor(y_train.values, dtype=torch.float32).view(-1, 1).to(device)
 X_val = torch.tensor(X_val, dtype=torch.float32).to(device)
-y_val = torch.tensor(y_val.values, dtype=torch.float32).to(device)
+y_val = torch.tensor(y_val.values, dtype=torch.float32).view(-1, 1).to(device)
 
 model = Model(len(X.columns)).to(device)
 
